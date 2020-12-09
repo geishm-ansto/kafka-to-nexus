@@ -9,7 +9,6 @@ ansible
 .gitignore
 codecov.yml
 *.md
-*.conf
 Jenkinsfile
 Dockerfile
 /venv/

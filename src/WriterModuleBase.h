@@ -93,6 +93,12 @@ public:
   /// \param msg The message to process
   virtual void write(FileWriter::FlatbufferMessage const &Message) = 0;
 
+  /// \brief Set the initial value for the stream.
+  ///
+  /// \param Value The initial value as a json string.
+  /// \param Time Timestamp as nsec from epoch.
+  virtual void init_value(std::string const &, const uint64_t &) {}
+
   void addConfigField(WriterModuleConfig::FieldBase *NewField);
 
 private:

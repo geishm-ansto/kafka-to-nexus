@@ -41,7 +41,7 @@ TEST_F(FieldHandlerFixture, SingleFieldMultipleKeys) {
   std::string TestKey2{"some_other_key"};
   int DefaultValue{42};
   int NewValue{55};
-  Field<int> TestField(Writer.get(), {TestKey1, TestKey2}, DefaultValue);
+  Field<int> TestField(Writer.get(), std::vector<std::string>{TestKey1, TestKey2}, DefaultValue);
   FieldHandler UnderTest;
   UnderTest.registerField(&TestField);
   auto TestStr = fmt::format("{{\"{}\":{}}}", TestKey2, NewValue);
@@ -56,7 +56,7 @@ TEST_F(FieldHandlerFixture, MultipleFieldsMultipleKeys) {
   int DefaultValue1{42};
   double DefaultValue2{3.333};
   double NewValue{55.546};
-  Field<int> TestField1(Writer.get(), {TestKey11, TestKey12}, DefaultValue1);
+  Field<int> TestField1(Writer.get(), std::vector<std::string>{TestKey11, TestKey12}, DefaultValue1);
   Field<double> TestField2(Writer.get(), TestKey21, DefaultValue2);
   FieldHandler UnderTest;
   UnderTest.registerField(&TestField1);

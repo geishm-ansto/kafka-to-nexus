@@ -27,6 +27,7 @@ struct StreamSettings {
   std::string Module;
   std::string Source;
   std::string ConfigStreamJson;
+  std::string InitialValue;
   std::string Attributes;
 };
 
@@ -56,7 +57,8 @@ public:
 private:
   static void addStreamSourceToWriterModule(
       std::vector<StreamSettings> const &StreamSettingsList,
-      std::unique_ptr<FileWriterTask> &Task);
+      std::unique_ptr<FileWriterTask> &Task,
+      const std::chrono::milliseconds &StartTime);
 
   static std::vector<StreamHDFInfo>
   initializeHDF(FileWriterTask &Task, std::string const &NexusStructureString);

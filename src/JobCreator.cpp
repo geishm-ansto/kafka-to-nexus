@@ -56,6 +56,9 @@ extractStreamInformationFromJsonForSource(StreamHDFInfo const &StreamInfo) {
       CommandParser::getRequiredValue<std::string>("source", ConfigStreamInner);
   StreamSettings.Module = CommandParser::getRequiredValue<std::string>(
       "writer_module", ConfigStreamInner);
+  StreamSettings.InitialValue = CommandParser::getOptionalValue<json>(
+                                    "initial_value", ConfigStreamInner, "")
+                                    .dump();
   StreamSettings.Attributes =
       CommandParser::getOptionalValue<json>("attributes", ConfigStream, "")
           .dump();
@@ -180,7 +183,7 @@ JobCreator::createFileWritingJob(StartCommandInfo const &StartInfo,
     }
   }
 
-  addStreamSourceToWriterModule(StreamSettingsList, Task);
+  addStreamSourceToWriterModule(StreamSettingsList, Task, StartInfo.StartTime);
 
   Settings.StreamerConfiguration.StartTimestamp = StartInfo.StartTime;
   Settings.StreamerConfiguration.StopTimestamp = time_point(StartInfo.StopTime);
@@ -195,7 +198,10 @@ JobCreator::createFileWritingJob(StartCommandInfo const &StartInfo,
 
 void JobCreator::addStreamSourceToWriterModule(
     vector<StreamSettings> const &StreamSettingsList,
-    std::unique_ptr<FileWriterTask> &Task) {
+    std::unique_ptr<FileWriterTask> &Task,
+    const std::chrono::milliseconds &StartTime) {
+  auto StartTimestamp =
+      std::chrono::duration_cast<std::chrono::nanoseconds>(StartTime).count();
   auto Logger = getLogger();
 
   for (auto const &StreamSettings : StreamSettingsList) {
@@ -230,6 +236,12 @@ void JobCreator::addStreamSourceToWriterModule(
           Logger->error("can not reopen HDF file for stream {}",
                         StreamSettings.StreamHDFInfoObj.HDFParentName);
           continue;
+        }
+        if (!StreamSettings.InitialValue.empty()) {
+          // Timestamp 0 to indicate it occured before the start of the test
+          // period
+          HDFWriterModule->init_value(StreamSettings.InitialValue,
+                                      StartTimestamp);
         }
       } catch (std::runtime_error const &e) {
         Logger->error("Exception on WriterModule::Base->reopen(): {}",

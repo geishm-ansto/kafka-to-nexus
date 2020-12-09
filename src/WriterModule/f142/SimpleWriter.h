@@ -12,7 +12,6 @@
 #include "FlatbufferMessage.h"
 #include "WriterModuleBase.h"
 #include "WriterModuleConfig/Field.h"
-#include <NeXusDataset/EpicsAlarmDatasets.h>
 #include <NeXusDataset/NeXusDataset.h>
 #include <array>
 #include <chrono>
@@ -22,15 +21,15 @@
 #include <vector>
 
 namespace WriterModule {
-namespace f142 {
+namespace s142 {
 using FlatbufferMessage = FileWriter::FlatbufferMessage;
 
 using std::string_literals::operator""s;
 
-class f142_Writer : public WriterModule::Base {
+class SimpleWriter : public WriterModule::Base {
 public:
   /// Implements writer module interface.
-  InitResult init_hdf(hdf5::node::Group &HDFGroup) override;
+  InitResult init_hdf(hdf5::node::Group &HDFGroup);
   /// Implements writer module interface.
   void config_post_processing() override;
   /// Implements writer module interface.
@@ -39,11 +38,11 @@ public:
   /// Write an incoming message which should contain a flatbuffer.
   void write(FlatbufferMessage const &Message) override;
 
-    /// Set the initial value.
+  /// Set the initial value.
   void init_value(std::string const &Value, const uint64_t &Time) override;
 
-  f142_Writer() : WriterModule::Base(false, "NXlog") {}
-  ~f142_Writer() override = default;
+  SimpleWriter() : WriterModule::Base(false, "NXlog") {}
+  ~SimpleWriter() override = default;
 
   enum class Type {
     int8,
@@ -56,6 +55,7 @@ public:
     uint64,
     float32,
     float64,
+    string
   };
 
 protected:
@@ -64,35 +64,20 @@ protected:
 
   Type ElementType{Type::float64};
 
-  NeXusDataset::MultiDimDatasetBase Values;
+  NeXusDataset::MultiDimDatasetBase NValues;
+  NeXusDataset::FixedSizeString SValues;
 
   /// Timestamps of the f142 updates.
   NeXusDataset::Time Timestamp;
 
-  /// Index into DatasetTimestamp.
-  NeXusDataset::CueTimestampZero CueTimestampZero;
-
-  /// Index into the f142 values.
-  NeXusDataset::CueIndex CueIndex;
-
-  /// Timestamps of changes in EPICS alarm status
-  NeXusDataset::AlarmTime AlarmTime;
-
-  /// Changes in EPICS alarm status
-  NeXusDataset::AlarmStatus AlarmStatus;
-
-  /// Severity corresponding to EPICS alarm status
-  NeXusDataset::AlarmSeverity AlarmSeverity;
-
-  WriterModuleConfig::Field<uint64_t> ValueIndexInterval{
-      this, "cue_interval", std::numeric_limits<uint64_t>::max()};
-  WriterModuleConfig::Field<size_t> ArraySize{this, "array_size", 1};
-  WriterModuleConfig::Field<size_t> ChunkSize{this, "chunk_size", 1024};
+  hdf5::Dimensions Shape{};
+  WriterModuleConfig::Field<size_t> ArraySize{this, "array_size", 0};
+  WriterModuleConfig::Field<size_t> ChunkSize{this, "chunk_size", 128};
   WriterModuleConfig::Field<std::string> DataType{
       this, std::initializer_list<std::string>({"type"s, "dtype"s}), "double"s};
   WriterModuleConfig::Field<std::string> Unit{
       this, std::initializer_list<std::string>({"value_units"s, "unit"s}), ""s};
 };
 
-} // namespace f142
+} // namespace s142
 } // namespace WriterModule

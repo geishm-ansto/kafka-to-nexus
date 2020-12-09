@@ -335,6 +335,27 @@ TEST_F(f142WriteData, UnitsAttributeOnValueDatasetNotCreatedIfNotInConfig) {
          "JSON config";
 }
 
+TEST_F(f142WriteData, InitValueTest) {
+  f142_WriterStandIn TestWriter;
+  TestWriter.parse_config(R"({
+              "type": "int16"
+            })");
+  std::uint64_t Timestamp{12};
+  std::int16_t ElementValue{12345};
+  TestWriter.init_hdf(RootGroup);
+  TestWriter.reopen(RootGroup);
+  EXPECT_EQ(TestWriter.ElementType, f142_Writer::Type::int16);
+  TestWriter.init_value(R"(12345)", Timestamp);
+  ASSERT_EQ(TestWriter.Values.get_extent(), hdf5::Dimensions({1, 1}));
+  ASSERT_EQ(TestWriter.Timestamp.dataspace().size(), 1);
+  std::vector<std::int16_t> WrittenValues(1);
+  TestWriter.Values.read(WrittenValues);
+  EXPECT_EQ(WrittenValues.at(0), ElementValue);
+  std::vector<std::uint64_t> WrittenTimes(1);
+  TestWriter.Timestamp.read(WrittenTimes);
+  EXPECT_EQ(WrittenTimes.at(0), Timestamp);
+}
+
 TEST_F(f142WriteData, WriteOneElement) {
   f142_WriterStandIn TestWriter;
   TestWriter.init_hdf(RootGroup);
